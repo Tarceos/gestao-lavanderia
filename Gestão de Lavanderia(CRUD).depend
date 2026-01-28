@@ -1,7 +1,8 @@
 # depslib dependency file v1.0
-1769297804 source:c:\users\user\tarcisio\programação\projetos\c\algortimos(ifba)\gestão de lavanderia(crud)\main.c
+1769536821 source:c:\users\user\tarcisio\programação\projetos\c\algortimos(ifba)\gestão de lavanderia(crud)\main.c
 	<stdio.h>
 	<stdlib.h>
 	<windows.h>
 	<string.h>
+	<conio.h>
 

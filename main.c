@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <string.h>
+#include <conio.h>
 
 #define MAX_PEDIDOS 10
 #define PEDIDO_MAXLENGTH 71
@@ -29,8 +30,9 @@ void read_order(char cliente[], int data[3], struct Pacote P);
 void update_order(char cliente[], int data[3], struct Pacote P);
 void delete_order(char cliente[], int data[3], struct Pacote P);
 
-
 void structAssing();
+void clearConsole();
+void continue_program_request();
 int check_archive(); // boolean 0 1
 int orderlist_length();
 
@@ -39,53 +41,133 @@ int orderlist_length();
 FILE *pedidos_lavagem;
 int nPedidos, i; // número de pedidos e contador
 
+// Código principal
+
 int main() {
 	SetConsoleOutputCP(CP_UTF8);
+	clearConsole();
 
 	int opcao;
 
     pedidos_lavagem = fopen(NOME_ARQUIVO, "r");
 	check_archive();
 	nPedidos = orderlist_length();
+	structAssing();
 	fclose(pedidos_lavagem);
-	//structAssing();
 
 	printf("Gestão de Lavanderia\n");
 	printf("Insira a opção desejada:\n");
-	printf("1.Criar um pedido;\n2.Ver pedidos existentes;\n3.Alterar um pedido;\n4.Remover um pedido.\n");
+	printf("1.Criar um pedido;\n2.Ver pedidos existentes;\n3.Alterar um pedido;\n4.Remover um pedido;\n5.Fechar o programa.\n");
 
 	scanf("%d", &opcao);
-	getchar();
+	while ( getchar() != '\n' );
 
 	switch (opcao) {
-    case 1:
-       printf("%d", nPedidos);
-        //create_order();
-        break;
-    case 2:
-        break;
-    case 3:
-        break;
-    case 4:
-        break;
+        case 1:
+            clearConsole();
+            printf("%d\n", nPedidos);
+            printf("Opção escolhida: 1.Criar um pedido.\n");
+            if (nPedidos == MAX_PEDIDOS) {
+                printf("Máximo de pedidos atingido.\n");
+            } else {
+                //create_order();
+            }
+            continue_program_request();
+            break;
+        case 2:
+            clearConsole();
+            printf("Opção escolhida: 2.Ver pedidos existentes.\n");
+            if ( nPedidos == 0 ) {
+                printf("Nenhum pedido encontrado.\n");
+            } else {
+
+            }
+            continue_program_request();
+            break;
+        case 3:
+            clearConsole();
+            printf("Opção escolhida: 3.Alterar um pedido.\n");
+            continue_program_request();
+            break;
+        case 4:
+            clearConsole();
+            printf("Opção escolhida: 4.Remover um pedido.\n");
+            continue_program_request();
+            break;
+        case 5:
+            printf("Opção escolhida: 5.Fechar o programa.\n");
+            printf("Programa Fechado\n");
+            return 0;
+            break;
+        default:
+            printf("OPCÂO INVÁLIDA!\n");
+            continue_program_request();
 	}
 
-	return 0;
+	return main();
 }
+
+// funções
+
 void structAssing() {
-    char buffer[PEDIDO_MAXLENGTH] = {0};
+    char bufferC;
+    int order_index = 0, contVirgu = 0;
 
-    printf("teste");
-
-    pedidos_lavagem = fopen(NOME_ARQUIVO, "r");
-    for ( i = 0 ; i < nPedidos ; i++ ) {
-        while ( fgets(buffer, PEDIDO_MAXLENGTH, pedidos_lavagem) != ",") {
-            strncpy(Pedidos[i].cliente, buffer, NOME_MAXLENGTH);
+    rewind(pedidos_lavagem);
+    while ((bufferC = fgetc(pedidos_lavagem)) != EOF) {
+        if (bufferC ==  ',') {
+            contVirgu++;
+        } else if (bufferC == '\n') {
+            order_index++;
+            contVirgu = 0;
         }
-        printf("%s\n", Pedidos[i].cliente);
+
+        switch (contVirgu) {
+            case 0:
+                Pedidos[order_index].
+                break;
+            case 1:
+                printf("%d\n", order_index);
+                break;
+            case 2:
+                printf("%d\n", order_index);                break;
+            case 3:
+                printf("%d\n", order_index);
+                break;
+            default:
+                break;
+        }
     }
-    fclose(pedidos_lavagem);
+
+
+    /*for ( i = 0 ; i < nPedidos ; i ++ ) {
+        printf("teste");
+        while ((bufferC = fgetc(pedidos_lavagem)) {
+            printf("Achei uma virgula");
+            if ( bufferC == "," ) {
+            }
+        }
+    }*/
+
 };
+
+void clearConsole() {
+    #ifdef _WIN32 // se caso for windows
+        system("cls");
+    #else
+        system("clear");
+    #endif
+}
+
+void continue_program_request() {
+    printf("Aperte qualquer tecla para continuar:\t");
+    while (1) { // assim que o usuário tecla algo o código retorna a si mesmo
+        if (_kbhit()) {
+            char tecla = _getch();
+            break;
+        }
+    }
+}
 
 int check_archive() { // checa se o arquivo existe
     if (pedidos_lavagem == NULL) { // se o arquivo não existir cria um novo arquivo
@@ -94,10 +176,11 @@ int check_archive() { // checa se o arquivo existe
 }
 
 int orderlist_length() { // conta o número de linhas/pedidos
-    char c[PEDIDO_MAXLENGTH] = {0}; // buffer
+    char buffer[PEDIDO_MAXLENGTH] = {0}; // buffer
     int n = 0;
 
-    while ( fgets(c, PEDIDO_MAXLENGTH, pedidos_lavagem) != NULL ) {
+    rewind(pedidos_lavagem);
+    while ( fgets(buffer, PEDIDO_MAXLENGTH, pedidos_lavagem) != NULL ) {
         n++;
     }
 
