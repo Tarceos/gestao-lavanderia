@@ -33,16 +33,19 @@ void read_order(); // Lê cada struct da lista até nPedidos, formata e imprime vi
 void update_order(); // Com o arquivo em branco, escreve os dados atuais de Pedidos até nPedidos
 void delete_order(int order_index); // Recebe o índice+1 de um pedido e o apaga de Pedidos
 
-void edit_order(int order_index, int value_code); // recebe o índice+1 de um pedido e um código para alterar um valor específico
+int edit_order(int order_index, int value_code); // recebe o índice+1 de um pedido e um código para alterar um valor específico
 void enum_order(); // mostra visualmente os pedidos de maneira mais simples
 
-void structAssing(); // Atribui oa dados do arquivo à struct no início do código
+void structAssing(); // Atribui oa dados do arquivo à struct no início do código e também conta o número de pedidos
 void clearConsole(); // Limpa o console independente de ser linux ou windows
 void continue_program_request(); // Ao user finalizar uma ação, captura qualquer tecla do teclado e continua o programa
 int check_archive(); // Checa se o arquivo existe e, se não existir, cria um novo
-int orderlist_length(); // conta quantos pedidos há no arquivo através do número de linhas
 
 FILE *pedidos_lavagem;
+/*
+    Quando o arquivo for aberto como "w", signifca q ele é apagado e reescrito
+    Quando o arquivo for aberto como "r", signifca q ele é apenas lido
+*/
 int nPedidos, i; // número de pedidos e contador
 
 // Código principal
@@ -54,7 +57,6 @@ int main() {
 
     pedidos_lavagem = fopen(NOME_FILE, "r");
 	check_archive(); // checa se o arquivo existe e se não existir cria um novo
-	nPedidos = orderlist_length(); // conta o número de linhas ( cada linha é um pedido )
 	structAssing(); // atribui cada informação de um pedido à sua respectiva struct
 	fclose(pedidos_lavagem);
 
@@ -65,8 +67,8 @@ int main() {
         printf("1.Criar um pedido;\n2.Ver pedidos existentes;\n3.Alterar um pedido;\n4.Remover um pedido;\n5.Fechar o programa.\n");
         printf("Insira a opção desejada:\n>\t");
 
-        opcao = fgetc(stdin);
-	    while(getchar() != '\n');
+        opcao = fgetc(stdin); // captura um caractere do teclado / da entrada padrão (stdin)
+	    while(getchar() != '\n'); // Limpeza de buffer
 
         switch (opcao) {
             case '1': // create
@@ -79,6 +81,7 @@ int main() {
                     create_order();
                     nPedidos++;
 
+                    // sempre que o arquivo precisa ser atualizado, todo seu conteúdo é apagado, após isso ele é reescrito
                     pedidos_lavagem = fopen(NOME_FILE, "w");
                     update_order();
                     fclose(pedidos_lavagem);
@@ -96,7 +99,9 @@ int main() {
                 }
                 continue_program_request();
                 break;
-            case '3': // edit ( Não existe "edit" em "crud", mas aí nós inventa o "crudE" )
+            case '3': ; // edit ( Não existe "edit" em "crud", mas aí nós inventa o "crudE" )
+                int pedido_escol, cod_dado; // pedido escolhido e código do dado;
+
                 clearConsole();
 
                 printf("Opção escolhida: 3.Alterar um pedido.\n");
@@ -104,14 +109,29 @@ int main() {
                     printf("Nenhum pedido encontrado.\n");
                 } else {
                     enum_order();
-                    printf("Escolha um pedido>\t");
-                    while ( scanf("%d", &escolha) != 1 || escolha < 1 || escolha > nPedidos ) {
+                    printf("Escolha um pedido\n>\t");
+                    while ( scanf("%d", &pedido_escol) != 1 || pedido_escol < 1 || pedido_escol > nPedidos ) { // checa se a escolha é válida
                         while ( getchar() != '\n' );
-                        printf("Insira um valor válido!\n");
+                        printf("Insira um valor válido!\n>\t");
                     }
                     while ( getchar() != '\n' );
-                    printf("C - nome do CLIENTE;\nD - DATA DE ENTREGA;\nP - PESO (EM KG);\n")
-                    printf("Insira ")
+
+                    printf("C - nome do CLIENTE;\nD - DATA DE ENTREGA;\nP - PESO (EM KG);\nT - TIPO DO TECIDO;\nE - CUIDADO nescessário.\n");
+                    printf("Insira o valor a ser alterado:\n>\t");
+                    cod_dado = fgetc(stdin);
+                    while(getchar() != '\n');
+
+                    if ( edit_order(pedido_escol, cod_dado) == 1 ) { // checa se foi possível editar o pedido
+                        while ( getchar() != '\n' );
+                        pedidos_lavagem = fopen(NOME_FILE, "w");
+                        update_order();
+                        fclose(pedidos_lavagem);
+
+                        printf("Dado atualizado.\n");
+                    } else {
+                        while ( getchar() != '\n' );
+                        printf("ENTRADA INVÁLIDA, OPERAÇÃO CANCELADA!\n");
+                    }
                 }
                 continue_program_request();
                 break;
@@ -120,6 +140,7 @@ int main() {
 
                 clearConsole();
 
+                // Obtendo pedido a ser apagado
                 printf("Opção escolhida: 4.Remover um pedido.\n");
                 if ( nPedidos == 0 ) {
                     printf("Nenhum pedido encontrado.\n");
@@ -128,10 +149,11 @@ int main() {
                     printf("Escolha um pedido>\t");
                     while ( scanf("%d", &escolha) != 1 || escolha < 1 || escolha > nPedidos ) {
                         while ( getchar() != '\n' );
-                        printf("Insira um valor válido!\n");
+                        printf("Insira um valor válido!\n>\t");
                     }
                     while ( getchar() != '\n' );
 
+                    // Apagando pedido
                     delete_order(escolha);
 
                     pedidos_lavagem = fopen(NOME_FILE, "w");
@@ -161,36 +183,37 @@ void create_order() {
     // nome do cliente
     printf("Insira o NOME do cliente\n>\t");
     fgets(Pedidos[nPedidos].cliente, NOME_MAXLENGTH, stdin);
-    Pedidos[nPedidos].cliente[strcspn(Pedidos[nPedidos].cliente, "\n")] = 0;
-    printf("%s", Pedidos[nPedidos].cliente);
+    Pedidos[nPedidos].cliente[strcspn(Pedidos[nPedidos].cliente, "\n")] = 0; // remove o \n do final para evitar quebra do arquivo
+    printf("%s\n", Pedidos[nPedidos].cliente);
 
     // data de entrega
     printf("Insira a DATA DE ENTREGA\n");
     printf("(Formato dd/mm/aaaa)\n>\t");
-    fgets(
-          Pedidos[nPedidos].data_entrega,
-          sizeof(Pedidos[nPedidos].data_entrega),
-          stdin
-    );
+    fgets(Pedidos[nPedidos].data_entrega, sizeof(Pedidos[nPedidos].data_entrega), stdin);
     Pedidos[nPedidos].data_entrega[strcspn(Pedidos[nPedidos].data_entrega, "\n")] = 0;
     printf("%s\n", Pedidos[nPedidos].data_entrega);
 
     // Peso do pedido
-    printf("Insira o PESO EM KG do pedido\n>\t");
-    scanf("%f", &Pedidos[nPedidos].pct.peso_kg);
+    printf("Insira o PESO EM KG do pedido\n");
+    printf("(Use ponto em vez de vírgula)\n>\t");
+    while ( scanf("%f", &Pedidos[nPedidos].pct.peso_kg) != 1 || Pedidos[nPedidos].pct.peso_kg < 0 || Pedidos[nPedidos].pct.peso_kg > 100 ) {
+        // garante que um número foi digitado e que não é menor que 0 ou maior que 100
+        while(getchar() != '\n');
+        printf("INSIRA UM VALOR VÁLIDO!\n>\t")
+;    }
     while(getchar() != '\n');
     printf("%.2f\n", Pedidos[nPedidos].pct.peso_kg);
 
     // tipo do tecido
     printf("Insira o TIPO DE TECIDO\n");
-    printf("Insira M para moletom;\nInsira J para jeans;\nInsira P para poliéster;\nInsira A para algodão;\nInsira L para linho.\n>\t");
+    printf("Insira M para moletom;\nInsira J para jeans;\nInsira P para poliéster;\nInsira A para algodão;\nInsira L para linho;\nOutro valor - Tecido exótico.\n>\t");
     Pedidos[nPedidos].pct.item.tipo_tecido = fgetc(stdin);
     while(getchar() != '\n');
     printf("%c\n", Pedidos[nPedidos].pct.item.tipo_tecido);
 
     // cuidado especial
     printf("Cuidado especial será nescessário?\n");
-    printf("(S - sim, Qualquer outro valor - não)\t>\t");
+    printf("(S - sim, Qualquer outro valor - não)\n>\t");
     Pedidos[nPedidos].pct.item.cuidado_especial = fgetc(stdin);
     while(getchar() != '\n');
     printf("%c\n", Pedidos[nPedidos].pct.item.cuidado_especial);
@@ -198,7 +221,7 @@ void create_order() {
 
 void read_order() {
     for ( i = 0 ; i < nPedidos ; i++ ) {
-        char tipoT[51] = "";
+        char tipoT[NOME_MAXLENGTH] = "";
 
         printf("=== Pedido %d ===\n", i+1);
         printf("Cliente: %s;\n", Pedidos[i].cliente);
@@ -237,23 +260,65 @@ void read_order() {
 
 void update_order() {
     for ( i = 0 ; i < nPedidos ; i++ ) {
-        fprintf(pedidos_lavagem,
-            "%s|%s|%.2f|%c|%c\n",
+        fprintf(pedidos_lavagem, // escreve no arquivo
+            "%s|%s|%.2f|%c|%c\n", // de acordo com essa formatação
             Pedidos[i].cliente,
             Pedidos[i].data_entrega,
             Pedidos[i].pct.peso_kg,
             Pedidos[i].pct.item.tipo_tecido,
             Pedidos[i].pct.item.cuidado_especial
+            // e os valores passados acima
         );
     }
 }
 
 void delete_order(int order_index) {
-    for ( i = order_index-1 ; i < nPedidos ; i++ ) {
-        Pedidos[i] = Pedidos[i+1];
+    for ( i = order_index-1 ; i < nPedidos-1 ; i++ ) {
+        Pedidos[i] = Pedidos[i+1]; // substitui o arquivo excluido pelo próximo arquivo
+        // faz o mesmo com os arquivos subsequentes
     }
-    nPedidos--;
-    memset(&Pedidos[nPedidos], 0, sizeof(Pedidos[nPedidos]));
+    nPedidos--; // diminui o contador de pedidos
+    memset(&Pedidos[nPedidos], 0, sizeof(Pedidos[nPedidos])); // exclui o ultimo pedido da lista
+}
+
+int edit_order(int order_index, int value_code) {
+    order_index--; // índice real do pedido
+    switch (tolower(value_code)) {
+        case 'c': // nome
+            printf("Insira o nome atuaizado:\n>\t");
+            fgets(Pedidos[order_index].cliente, NOME_MAXLENGTH, stdin);
+            Pedidos[order_index].cliente[strcspn(Pedidos[order_index].cliente, "\n")] = 0;
+            break;
+        case 'd': // data
+            printf("Insira a data de entrega atuaizada:\n>\t");
+            fgets(Pedidos[order_index].data_entrega, sizeof(Pedidos[order_index].data_entrega), stdin);
+            Pedidos[order_index].data_entrega[strcspn(Pedidos[order_index].data_entrega, "\n")] = 0;
+
+            break;
+        case 'p': // peso
+            printf("Insira o peso atuaizado:\n>\t");
+            while ( scanf("%f", &Pedidos[nPedidos].pct.peso_kg) != 1 || Pedidos[nPedidos].pct.peso_kg < 0 || Pedidos[nPedidos].pct.peso_kg > 100 ) {
+                   while( getchar() != '\n' );
+                    printf("INSIRA UM VALOR VÁLIDO!\n>\t");
+            }
+            while( getchar() != '\n' );
+            break;
+        case 't': // tipo
+            printf("Insira M para moletom;\nInsira J para jeans;\nInsira P para poliéster;\nInsira A para algodão;\nInsira L para linho;\nOutro valor - Tecido exótico.\n");
+            printf("Insira o tipo de tecido atuaizado:\n>\t");
+            Pedidos[order_index].pct.item.tipo_tecido = fgetc(stdin);
+            while(getchar() != '\n' );
+            break;
+        case 'e': // cuidado
+            printf("Insira o cuidado necessário atuaizado:\n");
+            printf("(S - sim, Qualquer outro valor - não)\n>\t");
+            Pedidos[order_index].pct.item.cuidado_especial = fgetc(stdin);            while(getchar() != '\n' );
+            break;
+        default: // qualquer outro valor
+            return 0;
+            break;
+    }
+    return 1;
 }
 
 void enum_order() {
@@ -267,32 +332,34 @@ void enum_order() {
 }
 
 void structAssing() {
-    char buffer[70] = {0};
+    char buffer[PEDIDO_MAXLENGTH] = {0};
     int orderCount = 0;
 
     rewind(pedidos_lavagem);
-    while ( fgets(buffer, sizeof(buffer), pedidos_lavagem) != NULL) {
+    while ( fgets(buffer, sizeof(buffer), pedidos_lavagem) != NULL) { // salva o pedido (linha) em uma string
         struct PedidoLavagem p;
-        sscanf(buffer,
-               "%50[^|]|%10[^|]|%f|%c|%c",
+        sscanf(buffer, // Atribui os valores em uma das structs da lista
+               "%50[^|]|%10[^|]|%f|%c|%c", // de acordo com essa formaação
                p.cliente,
                p.data_entrega,
                &p.pct.peso_kg,
                &p.pct.item.tipo_tecido,
                &p.pct.item.cuidado_especial
+               // os valores são atribuídos nas variáveis acima
         );
-        if ( orderCount < MAX_PEDIDOS) {
+        if ( orderCount < MAX_PEDIDOS ) { // evita o estouro
             Pedidos[orderCount] = p;
             orderCount++;
         }
     }
+    nPedidos = orderCount; // número de pedidos
 };
 
-void clearConsole() {
+void clearConsole() { // limpa o console
     #ifdef _WIN32 // se caso for windows
         system("cls");
     #else
-        system("clear");
+        system("clear"); // caso linux
     #endif
 }
 
@@ -314,17 +381,5 @@ int check_archive() { // checa se o arquivo existe
         return 0;
     }
     return 1;
-}
-
-int orderlist_length() { // conta o número de linhas/pedidos
-    char buffer[PEDIDO_MAXLENGTH] = {0}; // buffer
-    int n = 0;
-
-    rewind(pedidos_lavagem);
-    while ( fgets(buffer, PEDIDO_MAXLENGTH, pedidos_lavagem) != NULL ) {
-        n++;
-    }
-
-    return n;
 }
 
