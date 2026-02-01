@@ -1,4 +1,1 @@
-Create
-Read
-Update
-Delete
+Tarceos|07/03/2026|77.77|M|s
